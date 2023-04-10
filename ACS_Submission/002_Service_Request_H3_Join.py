@@ -3,14 +3,21 @@
 # MAGIC 
 # MAGIC # Introduction
 # MAGIC 
+# MAGIC This notebook spatially joins service requests for the past 12 months with H3 indexed bounds of the City of Cape Town.
 # MAGIC 
 # MAGIC ## Input data
 # MAGIC 
-# MAGIC 
-# MAGIC 
+# MAGIC `bronze__city_hex_polygons` - output from previous notebook ingesting polygons from bounds of city of Cape Town
+# MAGIC `sr.csv.gz` - Service requests stored in S3.
 # MAGIC 
 # MAGIC ## Logic
 # MAGIC 
+# MAGIC * Read in service request data from S3.
+# MAGIC * Convert both polygon and service request data to geopandas.
+# MAGIC * Spatially join.
+# MAGIC * Replace the H3 index of non joined records with 0.
+# MAGIC * Calculate error rate of join.
+# MAGIC * Fail notebook if error exceeds threshold.
 # MAGIC 
 # MAGIC ## Output
 # MAGIC 
