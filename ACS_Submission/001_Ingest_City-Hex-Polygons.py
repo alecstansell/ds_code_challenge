@@ -30,9 +30,7 @@
 # MAGIC 
 # MAGIC ## Output
 # MAGIC 
-# MAGIC 
-# MAGIC 
-# MAGIC ## Context
+# MAGIC `default.bronze__city_hex_polygons`
 
 # COMMAND ----------
 
