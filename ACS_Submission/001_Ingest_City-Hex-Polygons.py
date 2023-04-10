@@ -8,13 +8,15 @@
 # MAGIC 
 # MAGIC ## Input data
 # MAGIC 
-# MAGIC Data is located in S3 under:
+# MAGIC Input is located in S3 under:
 # MAGIC 
 # MAGIC * Bucket: `cct-ds-code-challenge-input-data`
 # MAGIC * File: `city-hex-polygons-8-10.geojson`
 # MAGIC 
-# MAGIC File city-hex-polygons-8.geojson contains the H3 spatial indexing system polygons and index values for the bounds of the City of Cape Town, at resolution level 8
 # MAGIC 
+# MAGIC `city-hex-polygons-8-10.geojson`: contains the H3 spatial indexing system polygons and index values for resolution levels 8, 9 and 10, for the City of Cape Town.
+# MAGIC 
+# MAGIC `city-hex-polygons-8.geojson`: contains the H3 spatial indexing system polygons and index values for the bounds of the City of Cape Town, at resolution level 8. Its used for validation.
 # MAGIC 
 # MAGIC 
 # MAGIC ## Logic
@@ -23,9 +25,7 @@
 # MAGIC * Apply transformations using Spark's DataFrame API
 # MAGIC   * Filter for json rows by excluding top meta data information re CRS.
 # MAGIC   * Select specific columns as per schema.
-# MAGIC * Assumes data is in a CSV file with one row per line and JSON data is stored within the value of the _c0 column
-# MAGIC * Specifies the JSON schema using PySpark's StructType and StructField classes
-# MAGIC * Requires a running Spark cluster with the necessary credentials and permissions to access the specified S3 bucket and file
+# MAGIC * Specify the JSON schema using PySpark's StructType and StructField classes
 # MAGIC * The resulting DataFrame can be further processed or used in downstream analysis or machine learning workflows
 # MAGIC 
 # MAGIC ## Output
@@ -45,6 +45,8 @@ from pyspark.sql import functions as F
 from pyspark.sql import types as T 
 import boto3
 from pyspark.sql import SparkSession
+import time
+import logging
 
 
 # COMMAND ----------
@@ -127,7 +129,34 @@ schema = T.StructType([
 
 # COMMAND ----------
 
-# Read raw df in using S3 query 
+# MAGIC %md ##### Add logging
+
+# COMMAND ----------
+
+
+# Create a logger
+logger = logging.getLogger(__name__)
+
+# Create a FileHandler to write log messages to a file
+handler = logging.FileHandler('/dbfs/test/log/ingest_log.log')
+
+# Set the logging level and format
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(handler)
+
+# COMMAND ----------
+
+# MAGIC %md #### Read in data
+
+# COMMAND ----------
+
+logging.debug("Starting data ingestion...")
+start_time = time.time()
+
 raw_df = spark.read.format("csv") \
     .option("header", "false") \
     .option("inferSchema", "false") \
@@ -138,13 +167,15 @@ raw_df = spark.read.format("csv") \
     .option("ignoreLeadingWhiteSpace", "true") \
     .option("ignoreTrailingWhiteSpace", "true") \
     .load("s3a://%s/%s" % (s3_input_bucket, s3_input_key)) 
-
-# Parse json    
+ 
 df = raw_df.filter("_c0 LIKE '{ %'") \
     .select(F.from_json("_c0", schema).alias("s")) \
     .selectExpr("s.properties.index", "s.properties.centroid_lat", "s.properties.centroid_lon", "s.geometry.type", "s.geometry.coordinates")
 
-display(df)
+# Collect to see speed of full extraction
+# df = df.collect()
+
+logging.info("Data extraction completed in %s seconds." % (time.time() - start_time))
 
 # COMMAND ----------
 
@@ -166,13 +197,14 @@ display(raw_df.filter(F.col('_c0').like("%crs%")))
 
 # COMMAND ----------
 
-dbutils.fs.mkdirs("fixture")
+dbutils.fs.mkdirs("test/fixture")
+dbutils.fs.mkdirs("test/log")
 
 # COMMAND ----------
 
 s3_file_path = 'city-hex-polygons-8.geojson'
 s3 = boto3.client('s3', region_name=s3_region, aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
-local_file_path = '/dbfs/fixture/city-hex-polygons-8.geojson'
+local_file_path = '/dbfs/test/fixture/city-hex-polygons-8.geojson'
 s3.download_file(s3_input_bucket, s3_file_path, local_file_path)
 
 # COMMAND ----------
@@ -203,5 +235,24 @@ val_df = spark.read.format("csv") \
 # COMMAND ----------
 
 result = val_df.join(df, val_df.index == df.index, 'anti')
-
 assert result.count() == 0, "Validation failed: unexpected records found in the joined DataFrame"
+
+# COMMAND ----------
+
+# MAGIC %md #### Save to Databricks
+# MAGIC Save to parquet delta table format in databricks for use downstream.
+
+# COMMAND ----------
+
+df.write \
+    .format("delta") \
+    .mode("overwrite") \
+    .saveAsTable("default.bronze__city_hex_polygons")
+
+# COMMAND ----------
+
+# MAGIC %md #### View data
+
+# COMMAND ----------
+
+# MAGIC %sql select * from default.bronze__city_hex_polygons limit 10 
