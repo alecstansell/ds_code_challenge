@@ -20,8 +20,8 @@ Alternatively you can use a Databricks environments with spark runtime > 10. Det
 
 The project is broken up into three notebooks addressing each component of the challenge.
 
-* `001_Ingest_City-Hex-Polygons.py` - Ingests data via S3 and stores in apache parquet.
-* `002_Service_Request_H3_Join.py` - Joins H3 Polygons for the bounds of Cape Town to service requests.
-* `003_Bellville_South_Service_Data_Wind` - Filters for a subsample of service requests close to Bellville and (TO DO) augments with wind data and anonymises requests.
+* [001_Ingest_City-Hex-Polygons.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/001_Ingest_City-Hex-Polygons.py) - Ingests data via S3 and stores in apache parquet.
+* [002_Service_Request_H3_Join.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/002_Service_Request_H3_Join.py) - Joins H3 Polygons for the bounds of Cape Town to service requests.
+* [003_Bellville_South_Service_Data_Wind](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/003_Bellville_South_Service_Data_Wind.py) - Filters for a subsample of service requests close to Bellville and (TO DO) augments with wind data and anonymises requests.
 
 
