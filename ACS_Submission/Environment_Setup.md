@@ -1,10 +1,8 @@
-# To do 
-- [ ] Add requirements file 
-- [ ] Consider airflow for coordination of notebooks. 
-
 # Setting up a PySpark Development Environment
 
 This project requires a PySpark environment to run. While the code would typically be run on a Spark cluster, it can be useful to develop and test the code using a local environment setup. This can later be deployed to an environment with a Spark cluster. Details of a potential EC2 or Databricks deployment are included below.
+
+The project was developed in a Databricks environment. 
 
 # Requirements
 
