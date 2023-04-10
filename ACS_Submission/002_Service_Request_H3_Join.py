@@ -116,7 +116,7 @@ hex_polygons_gdf = gpd.GeoDataFrame(hex_polygons_pd, geometry='geometry')
 
 # COMMAND ----------
 
-hex_polygons_gdf
+hex_polygons_gdf.head()
 
 # COMMAND ----------
 
@@ -129,7 +129,7 @@ service_requests_gdf = gpd.GeoDataFrame(service_requests_pd, geometry='geometry'
 
 # COMMAND ----------
 
-service_requests_pd
+service_requests_pd.head()
 
 # COMMAND ----------
 
@@ -142,6 +142,10 @@ joined_gdf = gpd.sjoin(service_requests_gdf, hex_polygons_gdf, op='within', how=
 
 # COMMAND ----------
 
+joined_gdf.head()
+
+# COMMAND ----------
+
 # MAGIC %md ### For any requests where the Latitude and Longitude fields are empty, set the index value to 0.
 
 # COMMAND ----------
@@ -151,19 +155,37 @@ joined_gdf['h3_index'] = joined_gdf.apply(lambda row: 0 if pd.isna(row['latitude
 
 # COMMAND ----------
 
+# MAGIC %md ### Calculate failed join error rate
+
+# COMMAND ----------
+
 failed_joins = joined_gdf[joined_gdf['h3_index'] == 0]
-failed_count = len(h3_index_zero)
+failed_count = len(failed_joins)
 total_count = len(joined_gdf)
 error_rate = failed_count/total_count
-print(f"Number of failed joins is:\t{failed_count} ")
+print(f"Number failed joins is:\t{failed_count} ")
+print(f"Error rate of join is:\t{error_rate} ")
+
+# COMMAND ----------
+
+# MAGIC %md #### Fail based on join error threshold
+# MAGIC 
+# MAGIC Chose an error of 10 % for the join for the following reasons:
+# MAGIC 
+# MAGIC * Accuracy of actual request data may be subject to some measurement error / logger or recording fault leading to mismatched records.
+# MAGIC * H3 polygons depending on resolution can result in error where records fall between between them. 
+# MAGIC * There may be overlap or mismatch across multiple areas.
+# MAGIC 
+# MAGIC An improvement would be to attempt a nearest neighbor join on service records that mismatch. 
 
 # COMMAND ----------
 
 error_threshold = 0.1
 if error_rate > error_threshold:
+    
     raise ValueError(f"Error rate ({error_rate}) exceeded the threshold ({error_threshold}).")
 
-# Calculate and log the time taken for the operations
+# Log time
 elapsed_time = time.time() - start_time
 print(f"Time taken for the operations: {elapsed_time} seconds")
 
