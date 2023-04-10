@@ -36,7 +36,15 @@
 
 # COMMAND ----------
 
-# MAGIC %md #### Libraries
+# MAGIC %pip install apache-sedona
+
+# COMMAND ----------
+
+# MAGIC %md ### Libraries
+
+# COMMAND ----------
+
+# MAGIC %pip install 
 
 # COMMAND ----------
 
@@ -51,7 +59,7 @@ import logging
 
 # COMMAND ----------
 
-# MAGIC %md #### Start spark session 
+# MAGIC %md ### Start spark session 
 # MAGIC (Not required in databricks but if deployed / run elsewhere)
 
 # COMMAND ----------
@@ -60,23 +68,22 @@ spark = SparkSession.builder.appName("City_Hex_Ingest").getOrCreate()
 
 # COMMAND ----------
 
-# MAGIC %md #### Credentials and bucket name
+# MAGIC %md ### Credentials and S3 details
 # MAGIC 
-# MAGIC **NB:** As the data is publicly accessible for now keeping the credentials in code is alright but better practice is moving them out and referencing them. 
-# MAGIC 
-# MAGIC These could be stored as secrets within Databricks or alternatively looked up from a keyvault.
+# MAGIC * Look up credentials in env file. If these were sensitive credentials they could be moved to AWS secrets or a keyvault.
 
 # COMMAND ----------
 
-aws_access_key = "AKIAYH57YDEWMHW2ESH2"
-aws_secret_key = "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"
-s3_input_bucket = "cct-ds-code-challenge-input-data"
-s3_region = 'af-south-1'
+load_dotenv()
+aws_access_key = os.environ["AWS_ACCESS_KEY"]
+aws_secret_key = os.environ["AWS_SECRET_KEY"]
+s3_input_bucket = os.environ["S3_BUCKET"]
+s3_region = os.environ["S3_REGION"] 
 s3_input_key = "city-hex-polygons-8-10.geojson"
 
 # COMMAND ----------
 
-# MAGIC %md #### S3 Select expression
+# MAGIC %md ### S3 Select expression
 # MAGIC 
 # MAGIC Can modify accordingly for larger files
 
@@ -86,7 +93,7 @@ s3_select_expression = "SELECT * FROM S3Object[*] s"
 
 # COMMAND ----------
 
-# MAGIC %md #### Define schema
+# MAGIC %md ### Define schema
 # MAGIC 
 # MAGIC Schema of the file:
 # MAGIC 
@@ -122,14 +129,14 @@ schema = T.StructType([
 
 # MAGIC %md 
 # MAGIC 
-# MAGIC #### Read in 
+# MAGIC ### Read in 
 # MAGIC 
 # MAGIC * Use spark read csv to read in the city-hex-polygons-8-10.geojson
 # MAGIC * Filter for valid json rows.
 
 # COMMAND ----------
 
-# MAGIC %md ##### Add logging
+# MAGIC %md #### Add logging
 
 # COMMAND ----------
 
@@ -179,7 +186,7 @@ logging.info("Data extraction completed in %s seconds." % (time.time() - start_t
 
 # COMMAND ----------
 
-# MAGIC %md #### View meta data
+# MAGIC %md ### View meta data
 # MAGIC 
 # MAGIC Extract CRS info removed with above filter
 
@@ -189,7 +196,7 @@ display(raw_df.filter(F.col('_c0').like("%crs%")))
 
 # COMMAND ----------
 
-# MAGIC %md #### Validate
+# MAGIC %md ### Validate
 # MAGIC 
 # MAGIC To validate against the data download the entire df `city-hex-polygons-8.geojson` (as opposed to querying it)
 # MAGIC 
@@ -226,7 +233,7 @@ val_df = spark.read.format("csv") \
 
 # COMMAND ----------
 
-# MAGIC %md #### Check for different index records
+# MAGIC %md ### Check for different index records
 # MAGIC 
 # MAGIC This has some limitations:
 # MAGIC * The route to ingestion is still the same - ie spark csv / we could use a different route such as with geospark sedonna.
@@ -239,7 +246,7 @@ assert result.count() == 0, "Validation failed: unexpected records found in the 
 
 # COMMAND ----------
 
-# MAGIC %md #### Save to Databricks
+# MAGIC %md ### Save to Databricks
 # MAGIC Save to parquet delta table format in databricks for use downstream.
 
 # COMMAND ----------
@@ -251,7 +258,7 @@ df.write \
 
 # COMMAND ----------
 
-# MAGIC %md #### View data
+# MAGIC %md ### View data
 
 # COMMAND ----------
 
