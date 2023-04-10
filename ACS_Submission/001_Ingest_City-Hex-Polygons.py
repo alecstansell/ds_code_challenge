@@ -31,11 +31,12 @@
 # MAGIC ## Output
 # MAGIC 
 # MAGIC 
+# MAGIC 
 # MAGIC ## Context
 
 # COMMAND ----------
 
-# MAGIC %md ## Access the file through S3 select
+# MAGIC %md #### Libraries
 
 # COMMAND ----------
 
@@ -45,10 +46,6 @@ from pyspark.sql import types as T
 import boto3
 from pyspark.sql import SparkSession
 
-
-# COMMAND ----------
-
-# MAGIC %md #### Download file
 
 # COMMAND ----------
 
@@ -63,20 +60,23 @@ spark = SparkSession.builder.appName("City_Hex_Ingest").getOrCreate()
 
 # MAGIC %md #### Credentials and bucket name
 # MAGIC 
-# MAGIC Note these could be moved to secrets within databricks or alternatively looked up from a keyvault or equivalent. <br/>
-# MAGIC As the data is publicly accessible for now keeping the credentials in code is alright but better practice is moving them out and referencing them. 
+# MAGIC **NB:** As the data is publicly accessible for now keeping the credentials in code is alright but better practice is moving them out and referencing them. 
+# MAGIC 
+# MAGIC These could be stored as secrets within Databricks or alternatively looked up from a keyvault.
 
 # COMMAND ----------
-
 
 aws_access_key = "AKIAYH57YDEWMHW2ESH2"
 aws_secret_key = "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"
 s3_input_bucket = "cct-ds-code-challenge-input-data"
+s3_region = 'af-south-1'
 s3_input_key = "city-hex-polygons-8-10.geojson"
 
 # COMMAND ----------
 
 # MAGIC %md #### S3 Select expression
+# MAGIC 
+# MAGIC Can modify accordingly for larger files
 
 # COMMAND ----------
 
@@ -86,7 +86,7 @@ s3_select_expression = "SELECT * FROM S3Object[*] s"
 
 # MAGIC %md #### Define schema
 # MAGIC 
-# MAGIC Schema of the file follows:
+# MAGIC Schema of the file:
 # MAGIC 
 # MAGIC * `type`: string field that specifies the type of the object.
 # MAGIC * `properties`: json object containing:
@@ -123,12 +123,12 @@ schema = T.StructType([
 # MAGIC #### Read in 
 # MAGIC 
 # MAGIC * Use spark read csv to read in the city-hex-polygons-8-10.geojson
-# MAGIC * Filter out the first few rows
+# MAGIC * Filter for valid json rows.
 
 # COMMAND ----------
 
-
-raw_rdd = spark.read.format("csv") \
+# Read raw df in using S3 query 
+raw_df = spark.read.format("csv") \
     .option("header", "false") \
     .option("inferSchema", "false") \
     .option("delimiter", "\n") \
@@ -138,19 +138,70 @@ raw_rdd = spark.read.format("csv") \
     .option("ignoreLeadingWhiteSpace", "true") \
     .option("ignoreTrailingWhiteSpace", "true") \
     .load("s3a://%s/%s" % (s3_input_bucket, s3_input_key)) 
-    
+
+# Parse json    
 df = raw_df.filter("_c0 LIKE '{ %'") \
     .select(F.from_json("_c0", schema).alias("s")) \
-    .selectExpr("s.properties.index", "s.properties.centroid_lat", "s.properties.centroid_lon", "s.geometry")
+    .selectExpr("s.properties.index", "s.properties.centroid_lat", "s.properties.centroid_lon", "s.geometry.type", "s.geometry.coordinates")
 
 display(df)
 
 # COMMAND ----------
 
-# MAGIC %md #### Get meta data
+# MAGIC %md #### View meta data
 # MAGIC 
 # MAGIC Extract CRS info removed with above filter
 
 # COMMAND ----------
 
 display(raw_df.filter(F.col('_c0').like("%crs%")))
+
+# COMMAND ----------
+
+# MAGIC %md #### Validate
+# MAGIC 
+# MAGIC To validate against the data download the entire df `city-hex-polygons-8.geojson` (as opposed to querying it)
+# MAGIC 
+# MAGIC Compare to the s3 ingested file.
+
+# COMMAND ----------
+
+dbutils.fs.mkdirs("fixture")
+
+# COMMAND ----------
+
+s3_file_path = 'city-hex-polygons-8.geojson'
+s3 = boto3.client('s3', region_name=s3_region, aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+local_file_path = '/dbfs/fixture/city-hex-polygons-8.geojson'
+s3.download_file(s3_input_bucket, s3_file_path, local_file_path)
+
+# COMMAND ----------
+
+val_df = spark.read.format("csv") \
+    .option("header", "false") \
+    .option("inferSchema", "false") \
+    .option("delimiter", "\n") \
+    .option("maxCharsPerRecord", 1048576) \
+    .option("quote", "'") \
+    .option("escape", "'") \
+    .option("ignoreLeadingWhiteSpace", "true") \
+    .option("ignoreTrailingWhiteSpace", "true") \
+    .csv("/fixture/city-hex-polygons-8.geojson") \
+    .filter("_c0 LIKE '{ %'") \
+    .select(F.from_json("_c0", schema).alias("s")) \
+    .selectExpr("s.properties.index", "s.properties.centroid_lat", "s.properties.centroid_lon", "s.geometry.type", "s.geometry.coordinates")
+
+
+# COMMAND ----------
+
+# MAGIC %md #### Check for different index records
+# MAGIC 
+# MAGIC This has some limitations:
+# MAGIC * The route to ingestion is still the same - ie spark csv / we could use a different route such as with geospark sedonna.
+# MAGIC * This test only covers if the indexed records are the same
+
+# COMMAND ----------
+
+result = val_df.join(df, val_df.index == df.index, 'anti')
+
+assert result.count() == 0, "Validation failed: unexpected records found in the joined DataFrame"
