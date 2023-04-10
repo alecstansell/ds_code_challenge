@@ -44,7 +44,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install 
+# MAGIC %pip install python-dotenv 
 
 # COMMAND ----------
 
@@ -55,6 +55,8 @@ import boto3
 from pyspark.sql import SparkSession
 import time
 import logging
+import os
+from dotenv import load_dotenv
 
 
 # COMMAND ----------
