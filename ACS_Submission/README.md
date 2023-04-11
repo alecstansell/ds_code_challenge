@@ -2,26 +2,25 @@
 # City of Cape Town - Data Science Unit Code Challenge
 
 
-## Data Engineering Submission - Alec Stansell
+## Cape Town Challenge Submission: Data Engineering Components by Alec Stansell
 
-This repository houses a solution to the Data Science unit challenge. 
-
-Its broken up into three notebooks responding to items 1, 2 and 5 of the Data Science challenge.
+This repository contains a solution for the data engineering items of the City of Cape Town Data Science Unit Challenge. The solution is divided into three Jupyter notebooks, each addressing a specific item from the challenge.
 
 ## Development Environment
 
-This project was developed in a Databricks environment with a spark 3.2.1 cluster with DBR runtime 10.4. 
+This project was developed in a Databricks environment with a spark 3.2.1 cluster with DBR runtime 10.4. For local setup [SETUP.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/SETUP.md) file provides detailed instructions on the local requirements for running PySpark, which is used extensively in the project.
 
-Should you wish to run PySpark locally [SETUP.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/SETUP.md) gives detailed instructions for dependencies on a local setup. 
-
-Alternatively you can use a Databricks environments with spark runtime > 10. Details of dependencies are listed per notebook.
+Alternatively, the code can be run or deployed on any Spark cluster or Databricks environment with Spark runtime version 10 or higher. Dependency details are provided for each notebook.
 
 ## Notebooks
 
-The project is broken up into three notebooks addressing each component of the challenge.
+The project consists of three Jupyter (Databricks) notebooks addressing each component of the challenge:
 
-* [001_Ingest_City-Hex-Polygons.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/001_Ingest_City-Hex-Polygons.py) - Ingests data via S3 and stores in apache parquet.
-* [002_Service_Request_H3_Join.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/002_Service_Request_H3_Join.py) - Joins H3 Polygons for the bounds of Cape Town to service requests.
-* [003_Bellville_South_Service_Data_Wind](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/003_Bellville_South_Service_Data_Wind.py) - Filters for a subsample of service requests close to Bellville and (TO DO) augments with wind data and anonymises requests.
+* **[001_Ingest_City-Hex-Polygons.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/001_Ingest_City-Hex-Polygons.py)**: Ingests data via S3 select and stores in Apache Parquet delta table format.
+* **[002_Service_Request_H3_Join.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/002_Service_Request_H3_Join.py)**: Joins H3 Polygons for the bounds of Cape Town to service requests.
+* **[003_Bellville_South_Service_Data_Wind](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/003_Bellville_South_Service_Data_Wind.py)**: Filters for a subsample of service requests close to Bellville and  augments with wind data / anonymises requests *(TO DO)*.
+
+The SETUP.md file is included to guide the local PySpark development environment setup.
+Alternatively, access to the Databricks development environment in which the code was developed can be provided upon request.
 
 
