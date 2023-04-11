@@ -4,7 +4,7 @@
 
 ## Cape Town Challenge Submission: Data Engineering Components by Alec Stansell
 
-This repository contains a solution for the data engineering items of the City of Cape Town Data Science Unit Challenge. The solution is divided into three Jupyter notebooks, each addressing a specific item from the challenge.
+This repository contains a solution for the data engineering items of the City of Cape Town Data Science Unit Challenge. The solution is divided into three notebooks, each addressing a specific item from the challenge.
 
 ## Development Environment
 
@@ -14,7 +14,7 @@ Alternatively, the code can be run or deployed on any Spark cluster or Databrick
 
 ## Notebooks
 
-The project consists of three Jupyter (Databricks) notebooks addressing each component of the challenge:
+The project consists of three notebooks addressing each component of the challenge:
 
 * **[001_Ingest_City-Hex-Polygons.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/001_Ingest_City-Hex-Polygons.py)**: Ingests data via S3 select and stores in Apache Parquet delta table format.
 * **[002_Service_Request_H3_Join.py](https://github.com/alecstansell/ds_code_challenge/blob/main/ACS_Submission/002_Service_Request_H3_Join.py)**: Joins H3 Polygons for the bounds of Cape Town to service requests.
