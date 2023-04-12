@@ -25,8 +25,12 @@ Alternatively, access to the Databricks development environment in which the cod
 
 ## Note to reviewers
 
-* Unfortunately due to time constraints over the Easter weekend I've yet to complete the wind augmentation and anonymisation components of task 3. Both are relatively simple - augmentation I'll just pull from the API and spatial join as needed, anonymise I'll likely hash any sensitive information / create keys as necessary. 
+Due to time constraints over the Easter weekend I'm afraid I'km yet to complete the wind augmentation and anonymisation components of task 3. 
 
-Thanks for the fun challenge! I'm keen to solve the other elements - Data Science and visualisation. I'll continue comitting to this repo over the next day or so shout if you have any questions or are interested in a conversation with me on my thinking for the challenge.
+Both are relatively straight forward and I'll complete in the next day or so.
+   * Augmentation I'll just pull from the API and spatial join as needed.
+   * Anonymise I'll likely hash any sensitive information / create keys as necessary. 
+
+Thanks for the fun challenge! I'm keen to solve the other elements - Data Science and visualisation. I'll continue comitting to this repo over the next few days. Keen to catchup if you have any questions or you are interested in a conversation with me on my thinking for the challenge. Alec
 
 
